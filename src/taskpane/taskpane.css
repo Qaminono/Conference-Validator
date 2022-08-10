@@ -1,0 +1,301 @@
+/* 
+ * Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
+ * See LICENSE in the project root for license information.
+ */
+
+ html,
+ body {
+     width: 100%;
+     height: 100%;
+     margin: 0;
+     padding: 0;
+ }
+ 
+ ul {
+     margin: 0;
+     padding: 0;
+ }
+ 
+ .ms-welcome__header {
+    padding: 20px;
+    padding-bottom: 30px;
+    padding-top: 100px;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    align-items: center;
+ }
+
+ .ms-welcome__main {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    -webkit-flex-wrap: nowrap;
+    flex-wrap: nowrap;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-flex: 1 0 0;
+    flex: 1 0 0;
+    padding: 10px 20px;
+ }
+ 
+ .ms-welcome__main > h2 {
+     width: 100%;
+     text-align: center;
+ }
+ 
+ .ms-welcome__features {
+     list-style-type: none;
+     margin-top: 20px;
+ }
+ 
+ .ms-welcome__features.ms-List .ms-ListItem {
+     padding-bottom: 20px;
+     display: -webkit-flex;
+     display: flex;
+ }
+ 
+ .ms-welcome__features.ms-List .ms-ListItem > .ms-Icon {
+     margin-right: 10px;
+ }
+ 
+ .ms-welcome__action.ms-Button--hero {
+     margin-top: 30px;
+ }
+ 
+.ms-Button.ms-Button--hero .ms-Button-label {
+  color: #0078d7;
+}
+
+.ms-Button.ms-Button--hero:hover .ms-Button-label,
+.ms-Button.ms-Button--hero:focus .ms-Button-label{
+  color: #005a9e;
+  cursor: pointer;
+}
+
+.ms-version_label {
+  color: #868686;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 5px;
+  font-family: Roboto,RobotoDraft,Helvetica,Arial,sans-serif;
+  letter-spacing: 0.8px;
+  position: absolute;
+  left: 20px;
+}
+
+b {
+    font-weight: bold;
+}
+
+.card {
+    border-radius: 8px;
+    box-shadow: 0 -1px 5px rgba(128,134,139,0.09),0 3px 5px rgba(128,134,139,0.06),0 1px 2px rgba(60,64,67,0.3),0 1px 3px rgba(60,64,67,0.15);
+    margin: 0 14px 16px;
+    overflow: hidden;
+
+}
+
+.card-label {
+    color: #5f6368;
+    font-family: Roboto,RobotoDraft,Helvetica,Arial,sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    height: 14px;
+    letter-spacing: 0.8px;
+    line-height: 14px;
+    text-transform: uppercase;
+    margin: 12px 0;
+    overflow: hidden;
+    padding: 6px 3px 4px 16px;
+}
+
+.card-container {
+    border-radius: 4px;
+    border-top: 1px solid #dadce0;
+    margin: 0 14px 16px;
+    outline: none;
+    overflow: hidden;
+}
+
+.container-row {
+    align-items: center;
+    border: 1px solid #dadce0;
+    border-top-color: rgb(218, 220, 224);
+    border-top-style: solid;
+    border-top-width: 1px;
+    border-top: none;
+    display: table;
+    width: 99.5%;
+    height: 40px;
+    margin: 0;
+    outline: none;
+    overflow-x: auto;
+    overflow-y: auto;
+    position: relative;
+    padding: auto;
+}
+
+.goto-cell-button {
+    background-color: #f8f9fa;
+    border-right: 1px solid #dadce0;
+    box-sizing: content-box;
+    color: #d93025;
+    flex-shrink: 0;
+    font-weight: 600;
+    overflow: hidden;
+    padding: 1px 0;
+    position: relative;
+    vertical-align: middle;
+    text-align: center;
+    width: 50px;
+    font-family: Roboto,RobotoDraft,Helvetica,Arial,sans-serif;
+    display: table-cell;
+}
+
+.row-explanation {
+    font-family: Roboto,RobotoDraft,Helvetica,Arial,sans-serif;
+    font-weight: normal;
+    font-size: 100%;
+    padding: 4px 8px;
+    display: table-cell;
+    vertical-align: middle;
+    text-align: left;
+}
+
+.goto-cell-button:hover {
+    background-color: #e0e0e0;
+    cursor: pointer;
+}
+
+.accept-button-container {
+    align-items: center;
+    border-radius: 0 0 4px 4px;
+    border-top: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    min-height: 32px;
+    padding: 0 8px;
+    text-align: left;
+}
+
+
+.accept-button {
+    background-image: none;
+    border: 1px solid transparent!important;
+    border-radius: 4px;
+    box-shadow: none;
+    box-sizing: border-box;
+    font-family: "Google Sans",Roboto,RobotoDraft,Helvetica,Arial,sans-serif;
+    font-weight: 650;
+    font-size: 14px;
+    height: 24px;
+    letter-spacing: 0.25px;
+    line-height: 16px;
+    background: transparent;
+    color: #137333;
+    outline: none;
+    padding: 3px 8px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: right;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.accept-button:hover {
+    background-color: #e0e0e0;
+    cursor: pointer;
+}
+
+.error-label {
+    background-image: none;
+    background-clip: padding-box;
+    border: 2px solid transparent!important;
+    border-radius: 6px;
+    box-shadow: none;
+    box-sizing: border-box;
+    color: #d93025;
+    padding: 6px;
+}
+
+.error-label:hover {
+    cursor: help;
+    background-color: #e9e9e9;
+}
+
+.warning-label {
+    background-image: none;
+    background-clip: padding-box;
+    border: 2px solid transparent!important;
+    border-radius: 6px;
+    box-shadow: none;
+    box-sizing: border-box;
+    color: #ddbd05;
+    padding: 6px;
+}
+
+.warning-label:hover {
+    cursor: help;
+    background-color: #e9e9e9;
+}
+
+.duplicate {
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    height: 1px;
+    background: #3c4043;
+    z-index: 1;
+    right: 9px;
+    display: table-cell;
+    pointer-events: none;
+  }
+
+.spinner {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50px;
+    height: 50px;
+}
+
+.ms-Icon--Warning {
+    font-weight: bold;
+    color: red;
+    font-size: 14px;
+}
+
+.ms-Icon--Warning:hover {
+    cursor: help;
+    color: #e80202
+}
+
+.loader {
+    --b: 5px;  /* border thickness */
+    --n: 10;    /* number of dashes*/
+    --g: 10deg; /* gap  between dashes*/
+    --c: red;   /* the color */
+
+    width:100px; /* size */
+    aspect-ratio: 1;
+    border-radius: 50%;
+    padding: 1px; /* get rid of bad outlines */
+    background: conic-gradient(#0000,var(--c)) content-box;
+    --_m: /* we use +/-1deg between colors to avoid jagged edges */
+            repeating-conic-gradient(#0000 0deg,
+            #000 1deg calc(360deg/var(--n) - var(--g) - 1deg),
+            #0000     calc(360deg/var(--n) - var(--g)) calc(360deg/var(--n))),
+            radial-gradient(farthest-side,#0000 calc(98% - var(--b)),#000 calc(100% - var(--b)));
+    -webkit-mask: var(--_m);
+    mask: var(--_m);
+    -webkit-mask-composite: destination-in;
+    mask-composite: intersect;
+    animation: load 0.7s infinite steps(var(--n));
+    margin: auto;
+}
+@keyframes load {to{transform: rotate(1turn)}}

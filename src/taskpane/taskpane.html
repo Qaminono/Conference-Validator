@@ -1,0 +1,111 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. -->
+<!-- This file shows how to design a first-run page that provides a welcome screen to the user about the features of the add-in. -->
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Conference Validator</title>
+
+        <!-- Office JavaScript API -->
+        <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
+
+        <!-- For more information on Fluent UI, visit https://developer.microsoft.com/fluentui#/. -->
+        <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css"/>
+
+        <!-- Template styles -->
+        <link href="taskpane.css" rel="stylesheet" type="text/css" />
+
+        <script type="text/javascript">
+            async function set_active(range_address) {
+                try {
+                await Excel.run(async (context) => {
+                    // Set the range address as the active range
+                    let currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
+                    let range = currentWorksheet.getRange(range_address);
+                    range.select();
+                    await context.sync();
+                });
+                } catch (error) {
+                console.error(error);
+                }
+            }
+        </script>
+        
+    </head>
+
+    <body class="ms-font-m ms-welcome ms-Fabric ms-bgColor-neutralLighter">
+        
+        <section id="sideload-msg" class="ms-welcome__main">
+            <header class="ms-welcome__header ms-bgColor-neutralLighter">
+                <img width="90" height="90" src="../../assets/logo-filled.png" alt="Conference Validator" title="Conference Validator" />
+                <h1 class="ms-font-su">Welcome</h1>
+            </header>
+            <h2 class="ms-font-xl">Please sideload your add-in to see app body.</h2>
+        </section>
+        <main id="app-welcome" class="ms-welcome__main" style="display: none;">
+            <div class="ms-version_label">Version 1.0.2</div>
+            <br><br><br><br>
+            <h2 class="ms-font-xl">The easiest way to validate data.</h2>
+            <ul class="ms-List ms-welcome__features">
+                <li class="ms-ListItem">
+                    <i class="ms-Icon ms-Icon--Error ms-font-xl"></i>
+                    <span class="ms-font-m">Find errors with just one click</span>
+                </li>
+                <li class="ms-ListItem">
+                    <i class="ms-Icon ms-Icon--CheckMark ms-font-xl"></i>
+                    <span class="ms-font-m">Correct typical mistakes without any problems</span>
+                </li>
+                <li class="ms-ListItem">
+                    <i class="ms-Icon ms-Icon--Design ms-font-xl"></i>
+                    <span class="ms-font-m">Speed up your work like a pro</span>
+                </li>
+            </ul>
+            <p class="ms-font-l">Click <b>Run</b> to start validations.</p>
+            <div role="button" id="run" class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl">
+                <span class="ms-Button-label">Run</span>
+            </div>
+        </main>
+        <main id="app-body" class="ms-welcome__main" style="display: none;">
+            <div id='loader' class="loader" style="--b: 10px;--c:gray;width:50px;--n:20;--g:7deg; display: none;"></div>
+            <div id="no-errors-msg" style="text-align: center; margin: auto; display: none">
+                <i class="ms-Icon ms-Icon--CheckMark ms-font-xxl" style="color: green; font-size: 100px;"></i>
+                <h2 class="ms-font-xxl" style="margin: auto">There are no known issues with your file.</h2>
+            </div>
+            <div id="errors-msg" style="margin: auto; display: none">
+                <div role="button" id="refresh" class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl"
+                style="margin: 10px">
+                    <span class="ms-Button-label">Refresh</span>
+                </div>
+                <div id="header-errors" style="display: inline-grid;"></div>
+                <div id="data-range-errors" style="display: inline-grid;"></div>
+                <div id="author-name-errors" style="display: inline-grid;"></div>
+                <div id="author-role-errors" style="display: inline-grid;"></div>
+                <div id="author-email-errors" style="display: inline-grid;"></div>
+                <div id="session-names-errors" style="display: inline-grid;"></div>
+                <div id="title-errors" style="display: inline-grid;"></div>
+                <div id="url-errors" style="display: inline-grid;"></div>
+                <div id="poster_session_errors" style="display: inline-grid;"></div>
+                <div id="duplicate-errors" style="display: inline-grid;"></div>
+            </div>
+            <div id="warning-msg" style="margin: auto; display: none">
+                <div role="button" id="refresh2" class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl"
+                style="margin: 10px">
+                    <span class="ms-Button-label">Refresh</span>
+                </div>
+                <div id="url-warnings" style="display: inline-grid;"></div>
+                <div id="title-warnings" style="display: inline-grid;"></div>
+                <div id="duplicate-warnings" style="display: inline-grid;"></div>
+            </div>
+        </main>
+        <main id="null-body" class="ms-welcome__main" style="text-align: center; margin: auto; display: none">
+            <div>
+                <i class="ms-Icon ms-Icon--Error ms-font-xxl" style="color: red; font-size: 100px;"></i>
+                <h2 class="ms-font-xxl" style="margin: auto">This file cannot be read. Please copy the cells that contain data (not the whole worksheet, this is important) into a new file and try again.</h2>
+                <p class="ms-font-l"></p>
+            </div>
+        </main>
+    </body>
+</html>
