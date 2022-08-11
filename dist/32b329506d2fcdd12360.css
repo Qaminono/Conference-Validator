@@ -244,6 +244,17 @@ b {
     background-color: #e9e9e9;
 }
 
+.title-decoration {
+    color: #0078d7;
+    text-decoration: underline;
+}
+
+.title-decoration:hover {
+    color: #025ea8;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
 .duplicate {
     position: absolute;
     left: 9px;
