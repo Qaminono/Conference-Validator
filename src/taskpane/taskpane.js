@@ -184,9 +184,9 @@ export async function run() {
       await test_session_names(data, rowCount);
       await test_titles(data, rowCount);
       await test_urls(data, rowCount);
-      await test_urls(data, rowCount);
-      await test_duplicates(data, rowCount);
       await test_poster_sessions(data, rowCount);
+      await test_several_main_roles(data, rowCount);
+      await test_duplicates(data, rowCount);
 
       // If there is no error, show the success message.
       if (document.getElementById("errors-msg").style.display === "none") {
@@ -221,9 +221,10 @@ export async function refresh() {
       document.getElementById("poster_session_errors").innerHTML = "";
       document.getElementById("duplicate-errors").innerHTML = "";
       // Clear the warnings message
+      document.getElementById("author-name-warnings").innerHTML = "";
       document.getElementById("url-warnings").innerHTML = "";
       document.getElementById("title-warnings").innerHTML = "";
-      document.getElementById("duplicate-warnings").innerHTML = "";
+      document.getElementById("several-main-role-warnings").innerHTML = "";
       // Run the tests again
       await run();
     });
@@ -325,16 +326,30 @@ export async function test_author_names(data, rowCount) {
        */
       // Set the spinner while the test is running
       document.getElementById("author-name-errors").innerHTML = spinner;
+      document.getElementById("author-name-warnings").innerHTML = spinner;
 
       // Set useful variables
       let author_index = 0;
       let regex = /\d+/gm;
+      let unexpected_characters = [
+        "{", "}", "(", ")", "[", "]",
+        "!", "?", "/", "|", "~", "*",
+        "&", "#", "$", "%", "^", "=",
+        "+", "<", ">", "@",
+      ];
 
       let errors = [];
+      let warnings = [];
       for (let index = 1; index < rowCount; index++) {
         let author_name_address = `A${index + 1}`;
         let row = data[index];
         let author_name = row[author_index].toString().trim();
+        let unexpected_characters_found = [];
+        for (let i = 0; i < unexpected_characters.length; i++) {
+          if (author_name.includes(unexpected_characters[i])) {
+            unexpected_characters_found.push(unexpected_characters[i]);
+          }
+        }
 
         //Test if the author name cell has a number in it
         if (regex.exec(author_name) !== null) {
@@ -356,11 +371,18 @@ export async function test_author_names(data, rowCount) {
         else if (author_name.length > 50) {
           errors.push([author_name_address, `Author name is too long`]);
         }
+        // Test if the author name cell contains unexpected characters
+        else if (unexpected_characters_found.length > 0) {
+          errors.push([
+            author_name_address,
+            `Author name "${author_name}" contains unexpected characters: ${unexpected_characters_found.join(" ")}`,
+          ]);
+        }
         //Test if the author name cell does not contain a black list word
         else {
-          let lower_url_cell_value = author_name.toLowerCase();
+          let lower_author_name = author_name.toLowerCase();
           for (let j = 0; j < black_list_words.length; j++) {
-            if (lower_url_cell_value.includes(black_list_words[j])) {
+            if (lower_author_name.includes(black_list_words[j])) {
               errors.push([
                 author_name_address,
                 `Author name "${author_name}" contains a word from a blacklist: "${black_list_words[j]}"`,
@@ -369,11 +391,19 @@ export async function test_author_names(data, rowCount) {
             }
           }
         }
+        // Test if author name does not start with a capital letter
+        if (author_name.charAt(0) !== author_name.charAt(0).toUpperCase()) {
+          warnings.push([author_name_address, `Author name "${author_name}" doesn't begin with a capital letter`]);
+        }
       }
       //If there are errors, create a card with the errors
       document.getElementById("author-name-errors").innerHTML = "";
+      document.getElementById("author-name-warnings").innerHTML = "";
       if (errors.length > 0) {
         await error_card_creator("author-name-errors", "AUTHORS", errors);
+      }
+      if (warnings.length > 0) {
+        await warning_card_creator("author-name-warnings", "AUTHORS", warnings);
       }
     });
   } catch (error) {
@@ -490,7 +520,7 @@ export async function test_titles(data, rowCount) {
       let title_index = 6;
 
       let errors = [];
-      let warns = [];
+      let warnings = [];
       for (let index = 1; index < rowCount; index++) {
         let title_address = `G${index + 1}`;
         let row = data[index];
@@ -499,10 +529,11 @@ export async function test_titles(data, rowCount) {
         // Test if the title cell is not empty
         if (role !== "Moderator" && title === "") {
           errors.push([title_address, `Presentation title is empty`]);
+          console.warn(`Presentation title is empty in row ${index + 1}`);
         }
         // Test if the title cell is too short
         else if (role !== "Moderator" && title.length <= 5) {
-          warns.push([title_address, `Presentation title is too short`]);
+          warnings.push([title_address, `Presentation title is too short`]);
         }
         // Test if the title cell is empty for a moderator
         else if (role === "Moderator" && title !== "") {
@@ -516,8 +547,8 @@ export async function test_titles(data, rowCount) {
       }
       //If there are warnings, create a card with the warnings
       document.getElementById("title-warnings").innerHTML = "";
-      if (warns.length > 0) {
-        await warning_card_creator("title-warnings", "TITLE", warns);
+      if (warnings.length > 0) {
+        await warning_card_creator("title-warnings", "TITLE", warnings);
       }
     });
   } catch (error) {
@@ -538,58 +569,84 @@ export async function test_urls(data, rowCount) {
       let video_url_index = 9;
 
       let errors = [];
-      let warns = [];
+      let warnings = [];
       for (let index = 1; index < rowCount; index++) {
         let url_address = `I${index + 1}`;
         let video_url_address = `J${index + 1}`;
         let row = data[index];
         let role = row[role_index].toString().trim();
-        let url = row[url_index].toString().trim();
-        let video_url = row[video_url_index].toString().trim();
+        let raw_url = row[url_index].toString().trim();
+        let url_list = [];
+        let raw_video_url = row[video_url_index].toString().trim();
+        let video_url_list = [];
 
-        // Test if the abstract url is valid for any role except moderator
-        if (role !== "Moderator") {
-          //check if the url not empty
-          if (url === "") {
-            errors.push([url_address, `Presentation URL is empty`]);
+        if (raw_url.includes("||")) {
+          url_list = raw_url.split("||");
+        } else {
+          url_list = [raw_url];
+        }
+        console.log(url_list);
+        if (raw_video_url.includes("||")) {
+          video_url_list = raw_video_url.split("||");
+        } else {
+          video_url_list = [raw_video_url];
+        }
+        console.log(video_url_list);
+        for (const url of url_list) {
+          // Test if the abstract url is valid for any role except moderator
+          if (role !== "Moderator") {
+            //check if the url not empty
+            if (url === "") {
+              errors.push([url_address, `Presentation URL is empty`]);
+            }
+            // Check if the url is valid
+            else if (!isValidHttpUrl(url)) {
+              errors.push([
+                url_address,
+                `<span class="title-decoration" title="${url}">Presentation URL</span> is invalid`,
+              ]);
+            }
+            // Check if the url do not lead to GitHub PDF viewer
+            else if (url.includes("github")) {
+              errors.push([url_address, `Presentation URL leads to the github PDF viewer`]);
+            }
           }
-          // Check if the url is valid
-          else if (!isValidHttpUrl(url)) {
-            errors.push([url_address, `Presentation URL is invalid`]);
-          }
-          // Check if the url do not lead to GitHub PDF viewer
-          else if (url.includes("github")) {
-            errors.push([url_address, `Presentation URL leads to the github PDF viewer`]);
+          // Test if the abstract url is valid for a moderator
+          else if (role === "Moderator" && url !== "") {
+            if (!isValidHttpUrl(url)) {
+              errors.push([
+                url_address,
+                `<span class="title-decoration" title="${url}">Presentation URL</span> is invalid`,
+              ]);
+            }
+            warnings.push([url_address, `Double check if the moderator needs the URL`]);
           }
         }
-        // Test if the abstract url is valid for a moderator
-        else if (role === "Moderator" && url !== "") {
-          if (!isValidHttpUrl(url)) {
-            errors.push([url_address, `Presentation URL is invalid`]);
+        for (const video_url of video_url_list) {
+          // Test if the video url is valid for any role except moderator
+          if (role !== "Moderator" && video_url !== "") {
+            if (!isValidHttpUrl(video_url)) {
+              errors.push([
+                video_url_address,
+                `<span class="title-decoration" title="${video_url}">Video URL</span> is invalid`,
+              ]);
+            }
           }
-          warns.push([url_address, `Double check if the moderator needs the URL`]);
-        }
-
-        // Test if the video url is valid for any role except moderator
-        if (role !== "Moderator" && video_url !== "") {
-          if (!isValidHttpUrl(video_url)) {
-            errors.push([video_url_address, `Video URL is invalid`]);
+          // Test if the video url is valid for a moderator
+          else if (role === "Moderator" && video_url !== "") {
+            errors.push([video_url_address, `Video URL must be empty for Moderator`]);
           }
-        }
-        // Test if the video url is valid for a moderator
-        else if (role === "Moderator" && video_url !== "") {
-          errors.push([video_url_address, `Video URL must be empty for Moderator`]);
         }
       }
       //If there are errors, create a card with the errors
       document.getElementById("url-errors").innerHTML = "";
       if (errors.length > 0) {
-        await error_card_creator("title-errors", "URL", errors);
+        await error_card_creator("url-errors", "URL", errors);
       }
       //If there are warnings, create a card with the warnings
       document.getElementById("url-warnings").innerHTML = "";
-      if (warns.length > 0) {
-        await warning_card_creator("url-warnings", "URL", warns);
+      if (warnings.length > 0) {
+        await warning_card_creator("url-warnings", "URL", warnings);
       }
     });
   } catch (error) {
@@ -602,7 +659,6 @@ export async function test_duplicates(data, rowCount) {
     await Excel.run(async (context) => {
       // Set the spinner while the test is running
       document.getElementById("duplicate-errors").innerHTML = spinner;
-      document.getElementById("duplicate-warnings").innerHTML = spinner;
       // Get the current worksheet
       let currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
 
@@ -610,14 +666,9 @@ export async function test_duplicates(data, rowCount) {
       let concat_cell_errors = currentWorksheet.getRange("X2");
       // Concatenate Name, Affiliation, Role, Session Name and Presentation Title
       concat_cell_errors.formulas = [[`=CONCATENATE(A2:A${i}, B2:B${i}, C2:C${i}, E2:E${i}, G2:G${i})`]];
-      let concat_cell_warnings = currentWorksheet.getRange("Y2");
-      // Concatenate Name and Presentation Title
-      concat_cell_warnings.formulas = [[`=CONCATENATE(A2:A${i}, G2:G${i})`]];
       await context.sync();
       let concat_range_errors = currentWorksheet.getRange(`X2:X${i}`);
       concat_range_errors.load("values");
-      let concat_range_warnings = currentWorksheet.getRange(`Y2:Y${i}`);
-      concat_range_warnings.load("values");
       await context.sync();
       // Search for error duplicates in the concatenated cells
       let errors_res = concat_range_errors.values.flat();
@@ -633,33 +684,7 @@ export async function test_duplicates(data, rowCount) {
           errors.push(temp_errors);
         }
       }
-      // Search for warning duplicates in the concatenated cells
-      let warnings_res = concat_range_warnings.values.flat();
-      let warnings_dup = warnings_res.getDuplicates();
-      let warnings_keys = Object.keys(warnings_dup);
-      let main_roles = ["Poster Presenter", "Speaker", "Invited Speaker", "Keynote Speaker"];
-      let warnings = [];
-      for (const key of warnings_keys) {
-        let temp_warnings = [];
-        let is_main_roles = [];
-        for (const index of warnings_dup[key]) {
-          if (main_roles.includes(data[index + 1][2])) {
-            is_main_roles.push(true);
-          }
-        }
-        console.log(main_roles);
-        console.log(is_main_roles);
-        if (is_main_roles.length !== 0 && is_main_roles.every((element) => element === true)) {
-          for (const index of warnings_dup[key]) {
-            temp_warnings.push([`A${index + 2}`, `${data[index + 1][0]} | ${data[index + 1][2]}`]);
-          }
-          if (temp_warnings.length > 1) {
-            warnings.push(temp_warnings);
-          }
-        }
-      }
       concat_range_errors.clear();
-      concat_range_warnings.clear();
       await context.sync();
       //If there are errors, create a card with the errors
       document.getElementById("duplicate-errors").innerHTML = "";
@@ -686,10 +711,51 @@ export async function test_duplicates(data, rowCount) {
         document.getElementById("remove-full-duplicates").onclick = remove_full_duplicates;
         document.getElementById("remove-presented-duplicates").onclick = remove_presented_duplicates;
       }
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function test_several_main_roles(data, rowCount) {
+  try {
+    await Excel.run(async (context) => {
+      // Set the spinner while the test is running
+      document.getElementById("several-main-role-warnings").innerHTML = spinner;
+      // Get the current worksheet
+      let currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
+      // Get all presentation titles
+      let concat_range_warnings = currentWorksheet.getRange(`G2:G${rowCount}`);
+      concat_range_warnings.load("values");
+      await context.sync();
+
+      // Get all indexes for persons in the same presentation
+      let warnings_res = concat_range_warnings.values.flat();
+      let warnings_dup = warnings_res.getDuplicates();
+      let warnings_keys = Object.keys(warnings_dup);
+      let main_roles = ["Poster Presenter", "Speaker", "Invited Speaker", "Keynote Speaker"];
+
+      // Search for several main roles by presentation
+      let warnings = [];
+      for (const key of warnings_keys) {
+        let temp_warnings = [];
+        for (const index of warnings_dup[key]) {
+          if (main_roles.includes(data[index + 1][2])) {
+            temp_warnings.push([`A${index + 2}`, `${data[index + 1][0]} | ${data[index + 1][2]}`]);
+          }
+        }
+        if (temp_warnings.length > 1) {
+          warnings.push(temp_warnings);
+        }
+      }
       //If there are warnings, create a card with the warnings
-      document.getElementById("duplicate-warnings").innerHTML = "";
+      document.getElementById("several-main-role-warnings").innerHTML = "";
       if (warnings.length > 0) {
-        await duplicate_warning_card_creator("duplicate-warnings", "SEVERAL MAIN ROLES BY PRESENTATION", warnings);
+        await duplicate_warning_card_creator(
+          "several-main-role-warnings",
+          "SEVERAL MAIN ROLES BY PRESENTATION",
+          warnings
+        );
       }
     });
   } catch (error) {
