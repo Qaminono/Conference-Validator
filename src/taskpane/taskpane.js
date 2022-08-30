@@ -103,6 +103,7 @@ const roles = [
 
 // Loading spinner gif
 const spinner = '<div class="loader" style="--b: 10px; --c:gray; width:50px; --n:20; --g:7deg"></div>';
+const button_loader = `<div class="loader" style="--b: 6px; --c:gray; width:30px; --n:13; --g:7deg"></div>`;
 
 // Function to check if a string is a valid email address
 const validateEmail = (email) => {
@@ -187,6 +188,7 @@ export async function run() {
       await test_poster_sessions(data, rowCount);
       await test_several_main_roles(data, rowCount);
       await test_duplicates(data, rowCount);
+      await test_html_tags_encodings(data, rowCount);
 
       // If there is no error, show the success message.
       if (document.getElementById("errors-msg").style.display === "none") {
@@ -807,6 +809,97 @@ export async function test_poster_sessions(data, rowCount) {
   }
 }
 
+export async function test_html_tags_encodings(data, rowCount) {
+  try {
+    await Excel.run(async (context) => {
+      // Set the spinner while the test is running
+      document.getElementById("html-errors").innerHTML = spinner;
+      // Check each cell for tags
+      let errors = [];
+      for (let row_index = 1; row_index < rowCount; row_index++) {
+        let row = data[row_index];
+        for (let column_index = 0; column_index < row.length; column_index++) {
+          // Check for tags in the cell
+          let cell_address = `${columns[column_index]}${row_index + 1}`;
+          let cell = document.createElement("div");
+          cell.innerHTML = row[column_index];
+          let tags = [...cell.querySelectorAll("*")].filter(
+            (el) => Object.prototype.toString.call(el) !== "[object HTMLUnknownElement]"
+          );
+          if (tags.length > 0) {
+            let formatted_tags = tags.map(function (tag) {
+              return `&lt;${tag.tagName.toLowerCase()}&gt;`;
+            });
+            formatted_tags = Array.from(new Set(formatted_tags));
+            errors.push([cell_address, `There are HTML tags: <code>${formatted_tags}</code>`]);
+          }
+          // Check for html entities in the cell
+          const regex = /&.+?;/gm;
+          let matches = [...row[column_index].toString().matchAll(regex)];
+          let matches_to_show = [];
+          for (const match of matches) {
+            if (!matches_to_show.includes(match[0]) && match[0] !== unescapeHTML(match[0])) {
+              matches_to_show.push(match[0]);
+            }
+          }
+          if (matches_to_show.length > 0) {
+            let formatted_matches = matches_to_show.map(function (match) {
+              return escapeHTML(match);
+            });
+            errors.push([cell_address, `There are HTML entities: <code>${formatted_matches}</code>`]);
+            console.log(errors);
+          }
+        }
+      }
+
+      //If there are errors, create a cards with the errors
+      document.getElementById("html-errors").innerHTML = "";
+      if (errors.length > 0) {
+        await error_card_creator("html-errors", "HTML", errors);
+      }
+      let card = document.getElementById("html-errors").getElementsByClassName("card")[0];
+      card.innerHTML += `<div class="accept-button-container">
+                             <span role="button"
+                             id="remove-html"
+                             class="accept-button"
+                             title="Removes tags and html entities">Remove HTML elements
+                             <i class="ms-Icon ms-Icon--Warning ms-font-xxl" title="This action cannot be undone via Ctrl+Z"></i>
+                             </span>
+                           </div>`;
+      document.getElementById("remove-html").onclick = clean_html_errors;
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function clean_html_errors() {
+  try {
+    await Excel.run(async (context) => {
+      document.getElementById("remove-html").innerHTML = button_loader;
+      // Get the current worksheet
+      let currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
+      let range = currentWorksheet.getUsedRange();
+      range.load("values");
+      await context.sync();
+      let data = range.values;
+      // Remove html from the range
+      for (let i = 0; i < data.length; i++) {
+        for (let j = 0; j < data[i].length; j++) {
+          data[i][j] = removeHTML(data[i][j]);
+        }
+      }
+      // Set the clean data
+      range.values = data;
+      range.format.rowHeight = 15;
+      await context.sync();
+      document.getElementById("html-errors").innerHTML = "";
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 export async function set_headers() {
   try {
     await Excel.run(async (context) => {
@@ -1004,4 +1097,33 @@ export async function warning_card_creator(card_id, card_title, card_content) {
   } catch (error) {
     console.error(error);
   }
+}
+
+export function escapeHTML(html) {
+  let element = document.createElement("textarea");
+  element.textContent = html;
+  return element.innerHTML;
+}
+
+export function unescapeHTML(html) {
+  let element = document.createElement("textarea");
+  element.innerHTML = html;
+  return element.textContent;
+}
+
+export function removeHTML(text) {
+  let html = unescapeHTML(text);
+  let element = document.createElement("div");
+  element.innerHTML = html;
+  let false_tags = [...element.querySelectorAll("*")].filter(
+    (el) => Object.prototype.toString.call(el) === "[object HTMLUnknownElement]"
+  );
+  if (false_tags.length > 0) {
+    for (const tag of false_tags) {
+      let regex = new RegExp(`(?<=<)(?=${tag.tagName})`, "gmi");
+      html = html.replace(regex, " ");
+    }
+  }
+  element.innerHTML = html;
+  return element.innerText;
 }

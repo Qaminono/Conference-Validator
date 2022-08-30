@@ -192,7 +192,8 @@ b {
     font-family: "Google Sans",Roboto,RobotoDraft,Helvetica,Arial,sans-serif;
     font-weight: 650;
     font-size: 14px;
-    height: 24px;
+    height: fit-content;
+    min-height: 24px;
     letter-spacing: 0.25px;
     line-height: 16px;
     background: transparent;
@@ -310,3 +311,4 @@ b {
     margin: auto;
 }
 @keyframes load {to{transform: rotate(1turn)}}
+
